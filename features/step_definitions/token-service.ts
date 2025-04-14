@@ -131,28 +131,36 @@ Then(/^The token is owned by the account$/, async function () {
 });
 
 Then(/^An attempt to mint (\d+) additional tokens succeeds$/, async function (amount: number) {
-  // Mint additional tokens
-  const transaction = new TokenMintTransaction()
-    .setTokenId(this.tokenId)
-    .setAmount(adjustForDecimals(amount));
 
-  transaction.freezeWith(client);
-  const signedTx = await transaction.sign(this.privateKey);
+  try {
+    // Mint additional tokens
+    const transaction = new TokenMintTransaction()
+      .setTokenId(this.tokenId)
+      .setAmount(adjustForDecimals(amount));
 
-  // Execute the mint transaction
-  const txResponse = await signedTx.execute(client);
-  await txResponse.getReceipt(client);
+    transaction.freezeWith(client);
+    const signedTx = await transaction.sign(this.privateKey);
 
-  // Verify the tokens were minted by checking the new supply
-  const tokenInfo = await new TokenInfoQuery()
-    .setTokenId(this.tokenId)
-    .execute(client);
+    // Execute the mint transaction
+    const txResponse = await signedTx.execute(client);
+    await txResponse.getReceipt(client);
 
-  if (tokenInfo.totalSupply) {
+    // Verify the tokens were minted by checking the new supply
+    const tokenInfo = await new TokenInfoQuery()
+      .setTokenId(this.tokenId)
+      .execute(client);
 
-    console.log(`Successfully minted ${amount} tokens`);
-  } else {
-    assert.fail("Total supply is null after minting");
+    if (tokenInfo.totalSupply) {
+
+      console.log(`Successfully minted ${amount} tokens`);
+    } else {
+
+      assert.fail("Total supply is null after minting");
+    }
+  }
+  catch (error) {
+    console.log("Error during token minting process:", error);
+    assert.fail("Minting should have succeeded but failed");
   }
 });
 
